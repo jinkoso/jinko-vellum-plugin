@@ -23,3 +23,10 @@ jobs:
 
       - name: Test
         run: bun test
+
+      # skills/jinko-travel/ is rendered from vendor/jinko-skills/ plus the
+      # Vellum overlay. This fails the build when the two have drifted — from a
+      # hand-edit of the rendered skill, or a vendor sync whose render was not
+      # committed. It reads no network: the upstream is vendored.
+      - name: Skill is rendered from the vendored upstream
+        run: bun scripts/render-skill.ts --check

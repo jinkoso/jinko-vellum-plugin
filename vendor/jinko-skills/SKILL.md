@@ -6,18 +6,6 @@ metadata:
   author: jinkoso
   version: "0.1.0"
   surface: builder-mcp
-  vellum:
-    category: "travel"
-    display-name: "Jinko Travel"
-    emoji: "✈️"
-    activation-hints:
-      - "book a flight"
-      - "find a hotel"
-      - "search flights"
-      - "plan a trip"
-      - "cancel my booking"
-      - "refund my flight"
-      - "change my flight"
 ---
 
 # Jinko Travel (Builder MCP)
@@ -118,51 +106,6 @@ Full detail for each step: [references/booking.md](references/booking.md).
 - Sessions expire after inactivity. If you receive a 404, re-initialize.
 - Money: search, calendar, monitoring, trip, checkout and `get_trip` results carry a `display` string beside each price (`display` inside a money object, `<field>_display` beside a bare number, e.g. `min_price_display`, `price_display`, `total_amount_display`): the ISO currency code and the amount at the currency's decimals, e.g. `"EUR 484.40"` (`flight_search` prints its prices in the same form). Quote `display` verbatim; never compute a price from `value`, `amount` or `decimal_places`. Refund, exchange and cancellation tools state their own money rules.
 - Authenticate with `Authorization: Bearer <token>`; not `X-API-Key`.
-
-<!-- BEGIN vellum overlay — generated from vellum/overlay.md by scripts/render-skill.ts -->
-
-## Vellum setup
-
-The tools above reach Jinko through this plugin's `jinko` MCP server, so the
-assistant sees them with an `mcp__…__jinko__` prefix (the qualifier is the
-plugin's install-directory name, normally `mcp__jinko-vellum-plugin__jinko__`).
-Every tool name in this skill is the suffix: `flight_search` is
-`mcp__jinko-vellum-plugin__jinko__flight_search`.
-
-If none of those tools are in the tool list, the MCP server did not start —
-almost always because no Jinko API key is stored. Run:
-
-```bash
-bun skills/jinko-travel/scripts/setup.ts
-```
-
-It prompts for the key and stores it in the credential vault. The server reads
-the key only at start, so after storing it, disable and re-enable the plugin
-(or restart the assistant) before retrying.
-
-## Paying with Link
-
-On Vellum, the agent path is a Link spend request. After `checkout`:
-
-1. Read `agent_spt_params` — `max_amount`, `currency`, `stripe_profile`,
-   `expires_at`.
-2. Create a Link spend request for `max_amount` in `currency` and get the
-   user's approval **before** `expires_at`. An expired quote has to be checked
-   out again.
-3. Pass the `spt_...` Shared Payment Token the approval produced to
-   `submit_agent_payment` with the `trip_id`.
-
-Do not call `submit_agent_payment` with an amount other than the one approved.
-
-Hand the user `checkout_url` instead when:
-
-- `max_amount` exceeds the 500 USD per-request cap on Link spend requests;
-- the user declines the spend request, or the approval fails;
-- `submit_agent_payment` comes back with a `checkout_url` in place of
-  `booking_ref`, which is the 3DS-step-up-or-decline response documented in
-  [references/booking.md](references/booking.md).
-
-<!-- END vellum overlay -->
 
 ## Read next
 

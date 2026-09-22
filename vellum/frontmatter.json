@@ -1,0 +1,14 @@
+{
+  "category": "travel",
+  "display-name": "Jinko Travel",
+  "emoji": "✈️",
+  "activation-hints": [
+    "book a flight",
+    "find a hotel",
+    "search flights",
+    "plan a trip",
+    "cancel my booking",
+    "refund my flight",
+    "change my flight"
+  ]
+}
