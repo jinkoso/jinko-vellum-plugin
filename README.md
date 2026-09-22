@@ -47,12 +47,25 @@ it installs as an unreviewed plugin: the install itself is the only review.
 Jinko issues one tenant API key (`jnk_t_...`) per Vellum organization. The
 key is sent as `Authorization: Bearer <key>`; `X-API-Key` is not accepted.
 
-The key is not shipped with the plugin. Each user's assistant reads it from
-that user's credential vault under `jinko-vellum-plugin/api_key`, or from
-`JINKO_API_KEY` in the environment when a host injects it there.
+The key is not shipped with the plugin. At start, the MCP child reads it
+from the assistant's credential vault under `jinko-vellum-plugin/api_key`,
+or from `JINKO_API_KEY` in the environment when a host injects it there.
+The credential's service name must equal the plugin's install-directory
+name, because the host scopes a plugin's vault reads to its own name.
 
-To obtain a key, request a tenant API key for your organization from Jinko.
-To store it:
+There are two ways the key gets into the vault.
+
+**Platform-provisioned (Vellum Cloud).** The Vellum control plane writes
+the organization's key into every managed assistant's vault as a
+platform-managed credential, the same way it provisions
+`vellum:assistant_api_key`: pushed through the daemon's `POST /v1/secrets`,
+hidden from `assistant credentials list` and `reveal`, and not deletable
+by the user. The plugin then needs no setup step. This requires Vellum to
+extend its platform-managed credential set with `jinko-vellum-plugin:api_key`
+and to keep the owning plugin's `resolveCredential` able to read it.
+
+**Self-stored (self-hosted assistants, or before provisioning exists).**
+Request a tenant API key for your organization from Jinko and store it:
 
 ```bash
 bun skills/jinko-travel/scripts/setup.ts
@@ -69,6 +82,10 @@ assistant credentials prompt \
   --placeholder "jnk_t_..." \
   --allowed-domains mcp.builders.gojinko.com,jinko-e90ee33b.alpic.live
 ```
+
+A self-stored credential is readable back with `assistant credentials
+reveal` by whoever controls that assistant, so a shared organization key
+should only be distributed this way to people allowed to hold it.
 
 The MCP child reads the key once, at start. After storing a key, disable and
 re-enable the plugin (or restart the assistant) so the server reconnects.
