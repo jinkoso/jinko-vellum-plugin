@@ -1,0 +1,24 @@
+{
+  "name": "jinko-vellum-plugin",
+  "version": "0.1.0",
+  "displayName": "Jinko Travel",
+  "description": "Flight and hotel search, booking, and servicing through Jinko's remote MCP server, authenticated with a Jinko API key from the Vellum credential vault.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "test": "bun test",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "@vellumai/plugin-api": "^0.12.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.30.0",
+    "zod": "4.3.6"
+  },
+  "devDependencies": {
+    "@types/bun": "1.4.2",
+    "@vellumai/plugin-api": "0.12.3",
+    "typescript": "5.9.3"
+  }
+}
