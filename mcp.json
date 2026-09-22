@@ -1,0 +1,13 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "jinko": {
+      "type": "stdio",
+      "command": "bun",
+      "args": ["${PLUGIN_ROOT}/skills/jinko-travel/scripts/mcp-proxy.ts"],
+      "env": {
+        "JINKO_MCP_URL": "https://mcp.builders.gojinko.com/mcp"
+      }
+    }
+  }
+}
