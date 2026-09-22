@@ -209,3 +209,13 @@ Live tool calls cost Jinko credits. `tools/list` does not.
   credential.
 - **`cwd` in `mcp.json` is ignored by the host**, so the plugin passes an
   absolute `${PLUGIN_ROOT}` path in `args` instead.
+- **Vault reads from an MCP child fail on vellum-assistant `175c45b6fa76`
+  (2026-09-22).** `resolveCredential()` calls `resolveCredentialRefLive()`
+  before anything has connected the child to the credential store, so the
+  first lookup in a plugin-spawned stdio process reports "Credential store
+  is unreachable" even when the key is stored. Verified in a local
+  self-hosted assistant: the same process resolves the key once the store
+  connection is primed, and `JINKO_API_KEY` in the environment works. Until
+  Vellum orders the backend connection before the live lookup in
+  `assistant/src/plugin-api/resolve-credential.ts`, the vault path
+  described above does not start the server; the env path does.
