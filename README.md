@@ -115,22 +115,62 @@ The dev builder exposes 20 — the 14 above plus `find_ground`,
 `ground_cancel`, `ground_exchange`, `car_search`, `car_cancel`,
 `car_exchange`.
 
-Booking order: search → `trip` (`add_item`) → `trip` (`upsert_travelers`) →
-`checkout` → payment → `get_booking`. Each step consumes a token or id the
-previous one returned.
+## Skill content
 
-## Payment
+The guidance in `skills/jinko-travel/` — which tool to call first, the
+booking order, the payment hand-off, the money and traveler-data rules — is
+not written in this repository. It is rendered from Jinko's canonical Agent
+Skills package, [jinkoso/jinko-skills](https://github.com/jinkoso/jinko-skills)
+(internal), so a Vellum assistant reads the same skill every other host does.
+The vendored commit is recorded in `vendor/jinko-skills/UPSTREAM.json`; today
+it is `8015d30b69288afa488f296a37aa408ab5eae85c` of `skills/jinko-travel`.
 
-`checkout` returns two paths:
+```
+vendor/jinko-skills/        pristine upstream, never edited here
+  SKILL.md                    upstream frontmatter + body
+  references/*.md             flights · hotels · booking · places
+  UPSTREAM.json               repo, commit, path, sync date
+vellum/frontmatter.json     the metadata.vellum block to merge
+vellum/overlay.md           the Vellum-only sections
+scripts/render-skill.ts     vendor + overlay → skills/jinko-travel/
+scripts/sync-upstream.ts    refresh vendor/, then render
+skills/jinko-travel/        rendered; do not hand-edit
+```
 
-- `agent_spt_params` — `{max_amount, currency, stripe_profile, expires_at}`.
-  Create a Vellum Link spend request for `max_amount` in `currency`, get the
-  user's approval before `expires_at`, and pass the resulting Stripe Shared
-  Payment Token (`spt_...`) to `submit_agent_payment` with the `trip_id`.
-- `checkout_url` — a browser payment page.
+The renderer keeps upstream's `name`, `description`, `compatibility` and
+`metadata.author` / `version` / `surface` verbatim, merges
+`metadata.vellum` from `vellum/frontmatter.json`, inserts the overlay just
+before upstream's `## Read next` heading so the references list stays last,
+and copies `references/` across unchanged. It is deterministic and
+idempotent; `bun scripts/render-skill.ts --check` prints a unified diff and
+exits 1 when `skills/jinko-travel/` has drifted, and CI runs it.
 
-Link spend requests are capped at 500 USD per request. Above that cap, and
-on a 3-D Secure step-up or a decline, hand the user `checkout_url`.
+Upstream's rule is **moved, not rewritten**: upstream text is never edited
+in this repository. Anything Vellum-specific — the `mcp__…__jinko__` tool
+prefix, the setup script, paying through a Link spend request — belongs in
+`vellum/overlay.md`.
+
+To pick up a new upstream revision:
+
+```bash
+bun scripts/sync-upstream.ts /path/to/jinko-skills
+```
+
+With no argument it shallow-clones the upstream instead. Either way it needs
+a maintainer who can read an internal repository, so CI never runs it — CI
+only checks that what is committed matches the render.
+
+Two things the rendered skill says that do not hold on this surface:
+
+- It names `find_dates` and `lowest_fare` in the tool map and the routing
+  list. The Builder MCP this plugin proxies advertises neither, on production
+  or dev. The text is left as upstream wrote it; `flight_calendar` covers the
+  same intent, and correcting the tool map is an upstream change.
+- `references/places.md` documents `GET /api/v1/flights/places/resolve`. A
+  Vellum assistant cannot call it: the proxy is the only authenticated path to
+  Jinko and it speaks MCP, and the assistant itself holds no Jinko key. The
+  page already says there is no `resolve_places` MCP tool and gives the
+  MCP-side fallback, which is the part that applies here.
 
 ## Local development
 
@@ -138,6 +178,7 @@ on a 3-D Secure step-up or a decline, hand the user `checkout_url`.
 bun install
 bun run typecheck
 bun test
+bun scripts/render-skill.ts --check
 ```
 
 The tests start a fake Jinko server in-process (the MCP SDK's own Streamable
